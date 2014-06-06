@@ -1,0 +1,49 @@
+%-synctex=1 -undump=pdflatex %ProjectDir%\%ProjectName%.tex --c-style-errors --interaction=batchmode --aux-directory=temp
+\documentclass[12pt,a4paper,pdftex]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage[nohyperlinks]{acronym}
+\usepackage[unicode,breaklinks=true,hypertexnames=false]{hyperref}
+\usepackage{pdfpages} 
+\usepackage{enumitem}
+\usepackage{tabularx}
+
+\usepackage{cmap}
+
+\usepackage{lmodern}
+\usepackage{textcomp}
+
+%\usepackage{circuitikz}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{amsmath}
+\usetikzlibrary{calc,arrows,positioning,decorations,trees,chains}
+\usepgfplotslibrary{patchplots,groupplots,units}
+
+\usepackage{pgfplotstable}
+\usepackage{verbatim}
+\usepackage{array}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{siunitx}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\part{The principle of operation}
+
+\part{The hardware}
+
+\part{The console app}
+
+\part{The GUI application}
+
+\input{text/gui/introduction}
+
+\end{document}

@@ -1,0 +1,28 @@
+[Config]
+Compilator.FileName=texify.exe
+Compilator.PSPar=--clean --batch --pdf --tex-option="-synctex=1 --interaction=batchmode --c-style-errors" %ProjectName%.tex
+Compilator.Log=%ProjectDir%\%ProjectName%.log
+Compilator.DefaultDir=%ProjectDir%
+Compilator.SaveAll=1
+Compilator.Capture=1
+Compilator.ParsLog=*] %F(%L             ;Borland Pascal
+Compilator.HideOutput=1
+Compilator.LogType=0
+Prog1=Foxit Reader,"C:\Program Files\Foxit Software\Foxit Reader\Foxit Reader.exe" %ProjectDir%\%ProjectName%.pdf§
+DefaultCPIndex=7
+LogtoEnd=1
+DontOpen=0
+AbsolutePath=0
+FileFormat=0
+ProjectFilesOnly=1
+[Project tree]
+Disertacka
+	+Projekt
+		-text
+			text\gui\introduction.tex
+		Documentation.tex
+[Open project files]
+1=Documentation.tex
+[Selected Project Files]
+Main=Documentation.tex
+Selected=Documentation.tex
