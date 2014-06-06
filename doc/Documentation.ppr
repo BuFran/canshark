@@ -18,11 +18,13 @@ ProjectFilesOnly=1
 [Project tree]
 Disertacka
 	+Projekt
-		-text
-			text\gui\introduction.tex
+		+text
+			+gui
+				text\gui\introduction.tex
 		Documentation.tex
 [Open project files]
-1=Documentation.tex
+0=Documentation.tex
+1=text\gui\introduction.tex
 [Selected Project Files]
 Main=Documentation.tex
-Selected=Documentation.tex
+Selected=text\gui\introduction.tex
