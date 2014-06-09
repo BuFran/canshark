@@ -13,3 +13,5 @@
 *.elay
 *.s#*
 *.b#*
+/doc/Documentation.log
+/doc/Documentation.pdf

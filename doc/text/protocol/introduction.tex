@@ -1,0 +1,24 @@
+\section{Introduction}
+
+\begin{tabularx}{\textwidth}{|r|c|c|X|}
+\hline
+{\bf Offset} & {\bf Len} & {\bf Type} & {\bf Description}\\
+\hline
+0 & 4 & {\tt uint32\_t} & {\bf COB}  \\\multicolumn{4}{|p{0.8\textwidth}|}{ 
+ObjectID of the frame \newline
+{\it 31}: IDE - CAN 2.0B Extended frame indicator\newline
+{\it 30}: RTR - Remote frame\newline
+{\it 29:18}: StdId - Standard ID\newline
+{\it 17:0}: ExtId - Extended ID extension (lower 18 bits)}\\\hline
+4 & 2 & {\tt uint16\_t} & {\bf Time}\\
+6 & 1 & {\tt byte} & {\bf Source}\\
+7 & 1 & {\tt byte} & {\bf Board}\\
+8 & 8 & {\tt byte[8]} & {\bf Data} - Data contained in message \\
+16 & 1 & {\tt byte} & {\bf DataLength} byte    - length of contained data \\
+17 & 7 & {\tt byte[7]} & {\bf Reserved} - Reserved for future use, board fills it with zeroes \\
+24 & 8 & {\tt uint64\_t} & {\bf Ticks}\\
+\hline
+\end{tabularx}
+
+
+
