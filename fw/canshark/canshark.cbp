@@ -104,6 +104,7 @@
 		<Unit filename="armv7m-vectstate.gdb" />
 		<Unit filename="inc/can_canopen.h" />
 		<Unit filename="inc/eth_f417.h" />
+		<Unit filename="inc/io.h" />
 		<Unit filename="inc/modcan.h" />
 		<Unit filename="inc/modled.h">
 			<Option target="Debug" />
@@ -2481,10 +2482,16 @@
 		<Unit filename="lib/opencm3/scripts/genlinktest.sh" />
 		<Unit filename="lib/opencm3/scripts/irq2nvic_h" />
 		<Unit filename="lib/opencm3/scripts/lpcvtcksum" />
-		<Unit filename="liblwip141-config.mk" />
-		<Unit filename="liblwip141-rules.mk" />
-		<Unit filename="libopencm3-config.mk" />
-		<Unit filename="libopencm3-rules.mk" />
+		<Unit filename="mk/gcc-config.mk" />
+		<Unit filename="mk/gcc-rules.mk" />
+		<Unit filename="mk/genlink-config.mk" />
+		<Unit filename="mk/genlink-rules.mk" />
+		<Unit filename="mk/liblwip141-config.mk" />
+		<Unit filename="mk/liblwip141-rules.mk" />
+		<Unit filename="mk/libopencm3-config.mk" />
+		<Unit filename="mk/libopencm3-rules.mk" />
+		<Unit filename="mk/stylecheck-config.mk" />
+		<Unit filename="mk/stylecheck-rules.mk" />
 		<Unit filename="scripts/checkpatch.pl" />
 		<Unit filename="src/eth_f417.c">
 			<Option compilerVar="CC" />
@@ -2508,7 +2515,6 @@
 		<Unit filename="src/stick.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="stylecheck-config.mk" />
 		<Extensions>
 			<code_completion />
 			<envvars />

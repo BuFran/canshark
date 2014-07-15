@@ -17,6 +17,7 @@
 #include "netif/etharp.h"
 
 #include "eth_f417.h"
+#include "io.h"
 
 #define ETH_RX_BUF_SIZE    1536 /* buffer size for receive */
 #define ETH_TX_BUF_SIZE    1536 /* buffer size for transmit */
@@ -40,21 +41,36 @@ void ethf417_gpio_init(void)
 	rcc_periph_clock_enable(RCC_ETHMACTX);
 
 	/* init pins for MII and SMI */
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO0 | GPIO1 | GPIO2 | GPIO3 | GPIO7);//0 a 3
-	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO12 | GPIO13 | GPIO11 | GPIO0 | GPIO1 | GPIO10);//
-	gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO1 | GPIO2 | GPIO3 | GPIO4 | GPIO5);//
-	gpio_mode_setup(GPIOE, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2);//
-
-	gpio_set_af(GPIOA, GPIO_AF11, GPIO0 | GPIO1 | GPIO2 | GPIO3 | GPIO7);
-	gpio_set_af(GPIOB, GPIO_AF11, GPIO12 | GPIO13 | GPIO11 | GPIO0 | GPIO1 | GPIO10);
-	gpio_set_af(GPIOC, GPIO_AF11, GPIO1 | GPIO2 | GPIO3 | GPIO4 | GPIO5);
-	gpio_set_af(GPIOE, GPIO_AF11, GPIO2);//
+	io_af(PA0, GPIO_AF11);
+	io_af(PA1, GPIO_AF11);
+	io_af(PA2, GPIO_AF11);
+	io_af(PA3, GPIO_AF11);
+	io_af(PA7, GPIO_AF11);
+	io_af(PB12, GPIO_AF11);
+	io_af(PB13, GPIO_AF11);
+	io_af(PB11, GPIO_AF11);
+	io_af(PB0, GPIO_AF11);
+	io_af(PB1, GPIO_AF11);
+	io_af(PB10, GPIO_AF11);
+	io_af(PC1, GPIO_AF11);
+	io_af(PC2, GPIO_AF11);
+	io_af(PC3, GPIO_AF11);
+	io_af(PC4, GPIO_AF11);
+	io_af(PC5, GPIO_AF11);
+	io_af(PE2, GPIO_AF11);
 
 	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO2);
 	gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO12 | GPIO13 | GPIO11);
 	gpio_set_output_options(GPIOC, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO1 | GPIO2);
 	gpio_set_output_options(GPIOC, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO2);
 	gpio_set_output_options(GPIOE, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO2);
+
+	io_input_pullup(PB15);	// INTR
+	io_output_high(PD8);	// RESET
+	// wait at least 10ms
+	for (int i = 0; i < 1680000; i++)
+		asm volatile ("nop");
+
 }
 
 static uint8_t pkt[1600];

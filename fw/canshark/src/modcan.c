@@ -10,6 +10,7 @@
 #include "stick.h"
 
 #include "can_canopen.h"
+#include "io.h"
 
 uint32_t MOB_ANY = 0;
 
@@ -27,12 +28,10 @@ void modcan_init(void)
 	rcc_periph_clock_enable(RCC_GPIOA);
 
 	// init pins
-	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO5 | GPIO6 );
-	gpio_set_af(GPIOB, GPIO_AF9, GPIO5 | GPIO6 );
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO11 | GPIO12 );
-	gpio_set_af(GPIOA, GPIO_AF9, GPIO11 | GPIO12 );
-	gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, GPIO6 );
-	gpio_set_output_options(GPIOA, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, GPIO12 );
+	io_af(PB5, GPIO_AF9);
+	io_af(PB6, GPIO_AF9);
+	io_af(PA11, GPIO_AF9);
+	io_af(PA12, GPIO_AF9);
 
 	can_reset(CAN1);
 	can_reset(CAN2);

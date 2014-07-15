@@ -2,11 +2,13 @@
 #include <libopencm3/stm32/gpio.h>
 
 #include "modled.h"
+#include "io.h"
 
 void modled_init(void)
 {
 	rcc_periph_clock_enable(RCC_GPIOD);
 
-	gpio_mode_setup(GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO2 | GPIO4 | GPIO10 );
-	gpio_set(GPIOD, GPIO2 | GPIO4 | GPIO10); /* turn off all leds */
+	io_output_high(PD2);
+	io_output_high(PD4);
+	io_output_high(PD10);
 }
