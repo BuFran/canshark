@@ -193,7 +193,8 @@ void io_low(uint32_t pin)
 INLINE
 void io_toggle(uint32_t pin)
 {
-	GPIO_ODR(io_port(pin)) ^= io_pin(pin);
+	uint32_t port = GPIO_ODR(io_port(pin));
+	GPIO_BSRR(io_port(pin)) = ((port & io_pin(pin)) << 16) | (~port & io_pin(pin));
 }
 
 INLINE
