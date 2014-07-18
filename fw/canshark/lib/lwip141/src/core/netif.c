@@ -136,14 +136,9 @@ void netif_init(void)
  *
  * @return netif, or NULL if failed.
  */
-struct netif *netif_add(struct netif *netif, ip_addr_t *ipaddr,
-			ip_addr_t *netmask, ip_addr_t *gw, void *state,
-			netif_init_fn init, netif_input_fn input)
+struct netif *netif_add(struct netif *netif, netif_init_fn init, netif_input_fn input)
 {
 	/* reset new interface configuration state */
-	ip_addr_set_zero(&netif->ip_addr);
-	ip_addr_set_zero(&netif->netmask);
-	ip_addr_set_zero(&netif->gw);
 	netif->flags = 0;
 #if LWIP_DHCP
 	/* netif not under DHCP control by default */
@@ -168,15 +163,12 @@ struct netif *netif_add(struct netif *netif, ip_addr_t *ipaddr,
 #endif				/* ENABLE_LOOPBACK */
 
 	/* remember netif specific state information data */
-	netif->state = state;
 	netif->num = netif_num++;
 	netif->input = input;
 	NETIF_SET_HWADDRHINT(netif, NULL);
 #if ENABLE_LOOPBACK && LWIP_LOOPBACK_MAX_PBUFS
 	netif->loop_cnt_current = 0;
 #endif /* ENABLE_LOOPBACK && LWIP_LOOPBACK_MAX_PBUFS */
-
-	netif_set_addr(netif, ipaddr, netmask, gw);
 
 	/* call user specified initialization function for netif */
 	if (init(netif) != ERR_OK) {
@@ -215,89 +207,6 @@ void netif_set_addr(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netmask, 
 	netif_set_ipaddr(netif, ipaddr);
 	netif_set_netmask(netif, netmask);
 	netif_set_gw(netif, gw);
-}
-
-/**
- * Remove a network interface from the list of lwIP netifs.
- *
- * @param netif the network interface to remove
- */
-void netif_remove(struct netif *netif)
-{
-	if (netif == NULL) {
-		return;
-	}
-#if LWIP_IGMP
-	/* stop IGMP processing */
-	if (netif->flags & NETIF_FLAG_IGMP) {
-		igmp_stop(netif);
-	}
-#endif /* LWIP_IGMP */
-	if (netif_is_up(netif)) {
-		/* set netif down before removing (call callback function) */
-		netif_set_down(netif);
-	}
-
-	snmp_delete_ipaddridx_tree(netif);
-
-	/*  is it the first netif? */
-	if (netif_list == netif) {
-		netif_list = netif->next;
-	} else {
-		/*  look for netif further down the list */
-		struct netif *tmpNetif;
-		for (tmpNetif = netif_list; tmpNetif != NULL;
-		     tmpNetif = tmpNetif->next) {
-			if (tmpNetif->next == netif) {
-				tmpNetif->next = netif->next;
-				break;
-			}
-		}
-		if (tmpNetif == NULL) {
-			return;	/*  we didn't find any netif today */
-		}
-	}
-	snmp_dec_iflist();
-	/* this netif is default? */
-	if (netif_default == netif) {
-		/* reset default netif */
-		netif_set_default(NULL);
-	}
-#if LWIP_NETIF_REMOVE_CALLBACK
-	if (netif->remove_callback) {
-		netif->remove_callback(netif);
-	}
-#endif /* LWIP_NETIF_REMOVE_CALLBACK */
-	LWIP_DEBUGF(NETIF_DEBUG, ("netif_remove: removed netif\n"));
-}
-
-/**
- * Find a network interface by searching for its name
- *
- * @param name the name of the netif (like netif->name) plus concatenated number
- * in ascii representation (e.g. 'en0')
- */
-struct netif *netif_find(char *name)
-{
-	struct netif *netif;
-	uint8_t num;
-
-	if (name == NULL) {
-		return NULL;
-	}
-
-	num = name[2] - '0';
-
-	for (netif = netif_list; netif != NULL; netif = netif->next) {
-		if (num == netif->num &&
-		    name[0] == netif->name[0] &&
-		    name[1] == netif->name[1]) {
-			LWIP_DEBUGF(NETIF_DEBUG, ("netif_find: found %c%c\n", name[0], name[1]));
-			return netif;
-		}
-	}
-	LWIP_DEBUGF(NETIF_DEBUG, ("netif_find: didn't find %c%c\n", name[0], name[1]));
-	return NULL;
 }
 
 /**
@@ -415,9 +324,7 @@ void netif_set_default(struct netif *netif)
 		snmp_insert_iprteidx_tree(1, netif);
 	}
 	netif_default = netif;
-	LWIP_DEBUGF(NETIF_DEBUG, ("netif: setting default interface %c%c\n",
-				  netif ? netif->name[0] : '\'',
-				  netif ? netif->name[1] : '\''));
+	LWIP_DEBUGF(NETIF_DEBUG, ("netif: setting default interface\n"));
 }
 
 /**
@@ -431,34 +338,31 @@ void netif_set_default(struct netif *netif)
  */
 void netif_set_up(struct netif *netif)
 {
-	if (!(netif->flags & NETIF_FLAG_UP)) {
-		netif->flags |= NETIF_FLAG_UP;
+	if (netif->flags & NETIF_FLAG_UP)
+		return;
+
+	netif->flags |= NETIF_FLAG_UP;
 
 #if LWIP_SNMP
-		snmp_get_sysuptime(&netif->ts);
+	snmp_get_sysuptime(&netif->ts);
 #endif /* LWIP_SNMP */
 
-		NETIF_STATUS_CALLBACK(netif);
+	NETIF_STATUS_CALLBACK(netif);
 
-		if (netif->flags & NETIF_FLAG_LINK_UP) {
-#if LWIP_ARP
-			/* For Ethernet network interfaces, we would like to send a "gratuitous ARP" */
-			if (netif->flags & (NETIF_FLAG_ETHARP)) {
-				etharp_gratuitous(netif);
-			}
-#endif /* LWIP_ARP */
+	if (!(netif->flags & NETIF_FLAG_LINK_UP))
+		return;
+
+
+	/* For Ethernet network interfaces, we would like to send a "gratuitous ARP" */
+	if (netif->flags & NETIF_FLAG_ETHARP)
+		etharp_gratuitous(netif);
+
 
 #if LWIP_IGMP
-			/* resend IGMP memberships */
-			if (netif->flags & NETIF_FLAG_IGMP) {
-				igmp_report_groups(netif);
-			}
+	/* resend IGMP memberships */
+	if (netif->flags & NETIF_FLAG_IGMP)
+		igmp_report_groups(netif);
 #endif /* LWIP_IGMP */
-		}
-
-
-        }
-	}
 }
 
 /**
@@ -471,19 +375,19 @@ void netif_set_up(struct netif *netif)
  */
 void netif_set_down(struct netif *netif)
 {
-	if (netif->flags & NETIF_FLAG_UP) {
-		netif->flags &= ~NETIF_FLAG_UP;
+	if (!(netif->flags & NETIF_FLAG_UP))
+		return;
+
+	netif->flags &= ~NETIF_FLAG_UP;
+
 #if LWIP_SNMP
-		snmp_get_sysuptime(&netif->ts);
+	snmp_get_sysuptime(&netif->ts);
 #endif
 
-#if LWIP_ARP
-		if (netif->flags & NETIF_FLAG_ETHARP) {
-			etharp_cleanup_netif(netif);
-		}
-#endif /* LWIP_ARP */
-		NETIF_STATUS_CALLBACK(netif);
-	}
+	if (netif->flags & NETIF_FLAG_ETHARP)
+		etharp_cleanup_netif(netif);
+
+	NETIF_STATUS_CALLBACK(netif);
 }
 
 #if LWIP_NETIF_STATUS_CALLBACK
@@ -493,63 +397,46 @@ void netif_set_down(struct netif *netif)
 void netif_set_status_callback(struct netif *netif,
 			       netif_status_callback_fn status_callback)
 {
-	if (netif) {
+	if (netif)
 		netif->status_callback = status_callback;
-	}
-}
-#endif				/* LWIP_NETIF_STATUS_CALLBACK */
 
-#if LWIP_NETIF_REMOVE_CALLBACK
-/**
- * Set callback to be called when the interface has been removed
- */
-void
-netif_set_remove_callback(struct netif *netif,
-			  netif_status_callback_fn remove_callback)
-{
-	if (netif) {
-		netif->remove_callback = remove_callback;
-	}
 }
-#endif				/* LWIP_NETIF_REMOVE_CALLBACK */
+#endif	/* LWIP_NETIF_STATUS_CALLBACK */
 
 /**
  * Called by a driver when its link goes up
  */
 void netif_set_link_up(struct netif *netif)
 {
-	if (!(netif->flags & NETIF_FLAG_LINK_UP)) {
-		netif->flags |= NETIF_FLAG_LINK_UP;
+	if (netif->flags & NETIF_FLAG_LINK_UP)
+		return;
+
+	netif->flags |= NETIF_FLAG_LINK_UP;
 
 #if LWIP_DHCP
-		if (netif->dhcp) {
-			dhcp_network_changed(netif);
-		}
+	if (netif->dhcp)
+		dhcp_network_changed(netif);
 #endif /* LWIP_DHCP */
 
 #if LWIP_AUTOIP
-		if (netif->autoip) {
-			autoip_network_changed(netif);
-		}
+	if (netif->autoip)
+		autoip_network_changed(netif);
 #endif /* LWIP_AUTOIP */
 
-		if (netif->flags & NETIF_FLAG_UP) {
-#if LWIP_ARP
-			/* For Ethernet network interfaces, we would like to send a "gratuitous ARP" */
-			if (netif->flags & NETIF_FLAG_ETHARP) {
-				etharp_gratuitous(netif);
-			}
-#endif /* LWIP_ARP */
+	if (!(netif->flags & NETIF_FLAG_UP))
+		return;
+
+	/* For Ethernet network interfaces, we would like to send a "gratuitous ARP" */
+	if (netif->flags & NETIF_FLAG_ETHARP)
+		etharp_gratuitous(netif);
 
 #if LWIP_IGMP
-			/* resend IGMP memberships */
-			if (netif->flags & NETIF_FLAG_IGMP) {
-				igmp_report_groups(netif);
-			}
+	/* resend IGMP memberships */
+	if (netif->flags & NETIF_FLAG_IGMP)
+		igmp_report_groups(netif);
 #endif /* LWIP_IGMP */
-		}
-		NETIF_LINK_CALLBACK(netif);
-	}
+
+	NETIF_LINK_CALLBACK(netif);
 }
 
 /**
@@ -557,10 +444,11 @@ void netif_set_link_up(struct netif *netif)
  */
 void netif_set_link_down(struct netif *netif)
 {
-	if (netif->flags & NETIF_FLAG_LINK_UP) {
-		netif->flags &= ~NETIF_FLAG_LINK_UP;
-		NETIF_LINK_CALLBACK(netif);
-	}
+	if (!(netif->flags & NETIF_FLAG_LINK_UP))
+		return;
+
+	netif->flags &= ~NETIF_FLAG_LINK_UP;
+	NETIF_LINK_CALLBACK(netif);
 }
 
 #if LWIP_NETIF_LINK_CALLBACK
@@ -570,9 +458,8 @@ void netif_set_link_down(struct netif *netif)
 void netif_set_link_callback(struct netif *netif,
 			     netif_status_callback_fn link_callback)
 {
-	if (netif) {
+	if (netif)
 		netif->link_callback = link_callback;
-	}
 }
 #endif /* LWIP_NETIF_LINK_CALLBACK */
 

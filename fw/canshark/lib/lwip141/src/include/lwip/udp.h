@@ -34,7 +34,7 @@
 
 #include "lwip/opt.h"
 
-#if LWIP_UDP /* don't build if not configured for use in lwipopts.h */
+//#if LWIP_UDP /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/pbuf.h"
 #include "lwip/netif.h"
@@ -110,7 +110,7 @@ extern struct udp_pcb *udp_pcbs;
 
 /* The following functions is the application layer interface to the
    UDP code. */
-struct udp_pcb *udp_new(void);
+void udp_init_pcb(struct udp_pcb *pcb);
 void udp_remove(struct udp_pcb *pcb);
 int8_t udp_bind(struct udp_pcb *pcb, ip_addr_t *ipaddr, uint16_t port);
 int8_t udp_connect(struct udp_pcb *pcb, ip_addr_t *ipaddr, uint16_t port);
@@ -142,6 +142,6 @@ void udp_debug_print(struct udp_hdr *udphdr);
 }
 #endif
 
-#endif /* LWIP_UDP */
+//#endif /* LWIP_UDP */
 
 #endif /* __LWIP_UDP_H__ */

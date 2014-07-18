@@ -19,6 +19,7 @@ struct can_message {
 };
 
 bool modcan_get(struct can_message *msg);
+struct can_message *canmsg_get(void);
 
 
 #endif // MODCAN_H_INCLUDED

@@ -11,6 +11,7 @@
 
 #include "can_canopen.h"
 #include "io.h"
+#include "board.h"
 
 uint32_t MOB_ANY = 0;
 
@@ -21,17 +22,16 @@ uint8_t msgs_r = 0;
 
 void modcan_init(void)
 {
-	// enable the clocks
 	rcc_periph_clock_enable(RCC_CAN1);
 	rcc_periph_clock_enable(RCC_CAN2);
-	rcc_periph_clock_enable(RCC_GPIOB);
-	rcc_periph_clock_enable(RCC_GPIOA);
 
-	// init pins
-	io_af(PB5, GPIO_AF9);
-	io_af(PB6, GPIO_AF9);
-	io_af(PA11, GPIO_AF9);
-	io_af(PA12, GPIO_AF9);
+	io_af(PCAN1_PIN_RX, PCAN1_AF);
+	io_af(PCAN1_PIN_TX, PCAN1_AF);
+	io_output_low(PCAN1_PIN_MODE);
+
+	io_af(PCAN2_PIN_RX, PCAN2_AF);
+	io_af(PCAN2_PIN_RX, PCAN2_AF);
+	io_output_low(PCAN2_PIN_MODE);
 
 	can_reset(CAN1);
 	can_reset(CAN2);
@@ -42,15 +42,11 @@ void modcan_init(void)
 	struct can_timing ct;
 	can_timing_init(&ct, CAN_FREQ_500K, CAN_SAMPLE_75);
 
-	//uint32_t canfreq = can_timing_getfreq(&ct);
-
 	if (can_enter_init_mode_blocking(CAN1)) {
 		can_mode_set_autobusoff(CAN1, true);
 		can_mode_set_timetriggered(CAN1, true);
 		can_timing_set(CAN1, &ct);
 		can_filter_set_slave_start(CAN1, 5);
-
-		//CAN_MCR(CAN1) &= ~CAN_MCR_DBF;
 
 		can_filter_init_enter(CAN1);
 		can_filter_set_mask32(CAN1, 0, 0, MOB_ANY, MOB_ANY);
@@ -64,7 +60,6 @@ void modcan_init(void)
 		can_mode_set_autobusoff(CAN2, true);
 		can_mode_set_timetriggered(CAN2, true);
 		can_timing_set(CAN2, &ct);
-
 
 		can_leave_init_mode_blocking(CAN2);
 	}
@@ -95,10 +90,9 @@ void modcan_init(void)
 static void can_isr_sce(uint32_t canport)
 {
 	(void)canport;
-	//LED_TGL(LED2);
 }
 
-static struct can_message *canmsg_get(void)
+struct can_message *canmsg_get(void)
 {
 	if (msgs[msgs_w].isthere) {
 		return NULL;
@@ -123,7 +117,6 @@ static void can_isr_tx(uint32_t canport)
 	} else if (CAN_TSR(canport) & CAN_TSR_RQCP2) {
 		mailbox = 2;
 	} else {
-		//LED_TGL(LED3);
 		return;
 	}
 
@@ -132,7 +125,6 @@ static void can_isr_tx(uint32_t canport)
 	struct can_message *msg = canmsg_get();
 
 	if (msg == NULL) {
-		//LED_TGL(LED4);
 		return;
 	}
 
@@ -150,7 +142,6 @@ static void can_isr_rx(uint32_t canport, uint32_t fifo)
 	struct can_message *msg = canmsg_get();
 
 	if (msg == NULL) {
-		//LED_TGL(LED4);
 		can_fifo_release(canport, fifo);
 		return;
 	}
@@ -167,17 +158,10 @@ void can1_sce_isr(void) { can_isr_sce(CAN1); }
 void can2_sce_isr(void) { can_isr_sce(CAN2); }
 void can1_tx_isr(void) { can_isr_tx(CAN1); }
 void can2_tx_isr(void) { can_isr_tx(CAN2); }
-void can1_rx0_isr(void) { LED_TGL(LED1); can_isr_rx(CAN1, 0); }
-void can1_rx1_isr(void) { LED_TGL(LED1); can_isr_rx(CAN1, 1); }
-void can2_rx0_isr(void) { LED_TGL(LED2); can_isr_rx(CAN2, 0); }
-void can2_rx1_isr(void) { LED_TGL(LED2); can_isr_rx(CAN2, 1); }
-
-
-
-void modcan_step(void)
-{
-
-}
+void can1_rx0_isr(void) { can_isr_rx(CAN1, 0); }
+void can1_rx1_isr(void) { can_isr_rx(CAN1, 1); }
+void can2_rx0_isr(void) { can_isr_rx(CAN2, 0); }
+void can2_rx1_isr(void) { can_isr_rx(CAN2, 1); }
 
 bool modcan_get(struct can_message *msg)
 {

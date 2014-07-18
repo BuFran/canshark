@@ -37,17 +37,17 @@
 #define ENABLE_LOOPBACK (LWIP_NETIF_LOOPBACK || LWIP_HAVE_LOOPIF)
 
 #include "lwip/err.h"
-
 #include "lwip/ip_addr.h"
-
 #include "lwip/def.h"
 #include "lwip/pbuf.h"
+
 #if LWIP_DHCP
 struct dhcp;
 #endif
 #if LWIP_AUTOIP
 struct autoip;
 #endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -159,10 +159,6 @@ struct netif {
 	/** This function is called when the netif link is set to up or down */
 	netif_status_callback_fn link_callback;
 #endif /* LWIP_NETIF_LINK_CALLBACK */
-#if LWIP_NETIF_REMOVE_CALLBACK
-	/** This function is called when the netif has been removed */
-	netif_status_callback_fn remove_callback;
-#endif /* LWIP_NETIF_REMOVE_CALLBACK */
 	/** This field can be set by the device driver and could point
 	 *  to state information for the device. */
 	void *state;
@@ -174,20 +170,12 @@ struct netif {
 	/** the AutoIP client state information for this netif */
 	struct autoip *autoip;
 #endif
-#if LWIP_NETIF_HOSTNAME
-	/* the hostname for this netif, NULL is a valid value */
-	char *hostname;
-#endif /* LWIP_NETIF_HOSTNAME */
 	/** maximum transfer unit (in bytes) */
 	uint16_t mtu;
-	/** number of bytes used in hwaddr */
-	uint8_t hwaddr_len;
 	/** link level hardware address of this interface */
 	uint8_t hwaddr[NETIF_MAX_HWADDR_LEN];
 	/** flags (see NETIF_FLAG_ above) */
 	uint8_t flags;
-	/** descriptive abbreviation */
-	char name[2];
 	/** number of this interface */
 	uint8_t num;
 #if LWIP_SNMP
@@ -254,8 +242,7 @@ extern struct netif *netif_default;
 
 void netif_init(void);
 
-struct netif *netif_add(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netmask,
-	ip_addr_t *gw, void *state, netif_init_fn init, netif_input_fn input);
+struct netif *netif_add(struct netif *netif, netif_init_fn init, netif_input_fn input);
 
 void netif_set_addr(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw);
 void netif_remove(struct netif *netif);
@@ -280,14 +267,11 @@ void netif_set_down(struct netif *netif);
 #if LWIP_NETIF_STATUS_CALLBACK
 void netif_set_status_callback(struct netif *netif, netif_status_callback_fn status_callback);
 #endif /* LWIP_NETIF_STATUS_CALLBACK */
-#if LWIP_NETIF_REMOVE_CALLBACK
-void netif_set_remove_callback(struct netif *netif, netif_status_callback_fn remove_callback);
-#endif /* LWIP_NETIF_REMOVE_CALLBACK */
 
 void netif_set_link_up(struct netif *netif);
 void netif_set_link_down(struct netif *netif);
 /** Ask if a link is up */
-#define netif_is_link_up(netif) (((netif)->flags & NETIF_FLAG_LINK_UP) ? (u8_t)1 : (u8_t)0)
+#define netif_is_link_up(netif) ((netif)->flags & NETIF_FLAG_LINK_UP)
 
 #if LWIP_NETIF_LINK_CALLBACK
 void netif_set_link_callback(struct netif *netif, netif_status_callback_fn link_callback);

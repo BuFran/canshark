@@ -47,7 +47,7 @@
 
 #include "lwip/opt.h"
 
-#if LWIP_UDP			/* don't build if not configured for use in lwipopts.h */
+//#if LWIP_UDP			/* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/udp.h"
 #include "lwip/def.h"
@@ -936,20 +936,17 @@ void udp_remove(struct udp_pcb *pcb)
  *
  * @see udp_remove()
  */
-struct udp_pcb *udp_new(void)
+void udp_init_pcb(struct udp_pcb *pcb)
 {
-	struct udp_pcb *pcb;
-	pcb = (struct udp_pcb *)memp_malloc(MEMP_UDP_PCB);
-	/* could allocate UDP PCB? */
-	if (pcb != NULL) {
-		/* UDP Lite: by initializing to all zeroes, chksum_len is set to 0
-		 * which means checksum is generated over the whole datagram per default
-		 * (recommended as default by RFC 3828). */
-		/* initialize PCB to all zeroes */
-		memset(pcb, 0, sizeof(struct udp_pcb));
-		pcb->ttl = UDP_TTL;
-	}
-	return pcb;
+	if (pcb == NULL)
+		return;
+
+	/* UDP Lite: by initializing to all zeroes, chksum_len is set to 0
+	 * which means checksum is generated over the whole datagram per default
+	 * (recommended as default by RFC 3828). */
+	/* initialize PCB to all zeroes */
+	memset(pcb, 0, sizeof(struct udp_pcb));
+	pcb->ttl = UDP_TTL;
 }
 
 #if UDP_DEBUG
@@ -971,4 +968,4 @@ void udp_debug_print(struct udp_hdr *udphdr)
 }
 #endif /* UDP_DEBUG */
 
-#endif /* LWIP_UDP */
+//#endif /* LWIP_UDP */

@@ -192,7 +192,7 @@ uint8_t ip4_addr_netmask_valid(uint32_t netmask);
 
 /* FORMAT for printf */
 #define IP4_F		"%" U16_F ".%" U16_F ".%" U16_F ".%" U16_F
-#define IP4_FV(val)	ip4_addr1_16(val), ip4_addr2_16(val), ip4_addr3_16(val), ip4_addr4_16(val),
+#define IP4_FV(val)	ip4_addr1_16(val), ip4_addr2_16(val), ip4_addr3_16(val), ip4_addr4_16(val)
 
 #define ip_addr_debug_print(debug, ipaddr)			\
 	if (ipaddr != NULL) {					\

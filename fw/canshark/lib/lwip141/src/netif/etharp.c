@@ -138,6 +138,17 @@ static uint8_t etharp_cached_entry;
 /** Compatibility define: free the queued pbuf */
 #define free_etharp_q(q) pbuf_free(q)
 
+int8_t etharp_get_entry(int i, struct ip_addr *ip, struct eth_addr *mac, uint8_t *ctime)
+{
+	if (i >= ARP_TABLE_SIZE)
+		return -1;
+
+	ip->addr = arp_table[i].ipaddr.addr;
+	memcpy(mac, &arp_table[i].ethaddr, ETHARP_HWADDR_LEN);
+	*ctime = arp_table[i].ctime;
+	return arp_table[i].state;
+}
+
 /** Clean up ARP table entries */
 static void etharp_free_entry(int i)
 {

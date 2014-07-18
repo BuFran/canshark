@@ -102,15 +102,18 @@
 			<Option target="Release" />
 		</Unit>
 		<Unit filename="armv7m-vectstate.gdb" />
+		<Unit filename="inc/board.h" />
 		<Unit filename="inc/can_canopen.h" />
 		<Unit filename="inc/eth_f417.h" />
 		<Unit filename="inc/io.h" />
+		<Unit filename="inc/ipv4/ipv4.h" />
+		<Unit filename="inc/ipv4/mac.h" />
 		<Unit filename="inc/modcan.h" />
 		<Unit filename="inc/modled.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="inc/modnet.h" />
+		<Unit filename="inc/serial.h" />
 		<Unit filename="inc/stick.h" />
 		<Unit filename="ld/STM32F407.ld">
 			<Option target="Debug" />
@@ -1924,8 +1927,6 @@
 		<Unit filename="lib/opencm3/include/libopencmsis/stm32/f3/irqhandlers.h" />
 		<Unit filename="lib/opencm3/include/libopencmsis/stm32/f4/irqhandlers.h" />
 		<Unit filename="lib/opencm3/include/libopencmsis/stm32/l1/irqhandlers.h" />
-		<Unit filename="lib/opencm3/ld/Makefile.example" />
-		<Unit filename="lib/opencm3/ld/Makefile.linker" />
 		<Unit filename="lib/opencm3/ld/README" />
 		<Unit filename="lib/opencm3/ld/devices.data" />
 		<Unit filename="lib/opencm3/ld/linker.ld.S" />
@@ -2509,7 +2510,7 @@
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="src/modnet.c">
+		<Unit filename="src/serial.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/stick.c">
