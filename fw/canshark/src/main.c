@@ -50,7 +50,7 @@ void sys_tick_handler(void)
 {
 	stick_update();
 
-	canopen_sync(CAN1);
+	//canopen_sync(CAN1);
 }
 
 uint64_t arp_tmr;
@@ -59,7 +59,6 @@ uint64_t led_tmr;
 #define BENCHMARK_START(a)	a = dwt_read_cycle_counter()
 #define BENCHMARK_END(a)	a = dwt_read_cycle_counter() - a;
 
-struct can_message modcan_buffer[8];
 const char s_boot_start[] = "\n\n"
   "**************************************************************************\n"
   "    CanShark v 2.0 booting ...\n\n";
@@ -69,9 +68,9 @@ const char s_boot_finish[] =
   "**************************************************************************\n";
 
 struct ip_addr ip_bind = { IPADDR_ANY };
-struct ip_addr ip_dest = { IPADDR_BROADCAST };
+struct ip_addr ip_dest = { IPV4_ADDR(10, 0, 0, 9) };
 
-const uint8_t mac[] = {0xE6, 0x00, 0x00, 0x00, 0x00, 0x01};
+const uint8_t mac[] = {0xE6, 0x01, 0x00, 0x00, 0x00, 0x01};
 
 struct udp_pcb udp;
 
@@ -104,27 +103,48 @@ static void protocol_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_add
 	pbuf_free(p);
 }
 
+// Cache timeout is measured with jitter 2ms due to time measuring principle.
+#define CACHE_TIMEOUT	4		// 4ms +- 2ms
+
+// absolute maximum cache length is max 46 messages per packet [1472 bytes]
+// Reasonable maximum cache length is max 40 messages per packet [1280 bytes]
+#define CACHE_SIZE	32
+struct can_message cache[CACHE_SIZE];
+uint32_t cache_pos = 0;
+uint64_t cache_last = 0;
+
 static void protocol_poll(void)
 {
-	int n = 0;
-	while (modcan_get(&modcan_buffer[n]) && (n < 8)) {
-		n++;
+	// pre-cache measured values
+	while ((cache_pos < CACHE_SIZE) && modcan_get(&cache[cache_pos])) {
+		cache_pos++;
 	}
 
-	if (n == 0)
-		return;
+	if (cache_pos == 0)
+		return;		// nothing cached to send
 
-	struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, n * sizeof(struct can_message), PBUF_RAM);
+	uint64_t time = stick_get();
+
+	if ((cache_pos < CACHE_SIZE) &&
+	    ((time - cache_last) < CACHE_TIMEOUT))
+		return;		// the cache is too new, wait for neext packets
+
+	// we have full cache, we should send it to client
+
+	uint16_t len = cache_pos * sizeof(struct can_message);
+
+	cache_pos = 0;
+	cache_last = time;
+
+	struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
 	if (p == NULL)
-		return;		/* packets are lost ! */
+		return;		/* packets are lost ! */		/* TODO: Handle error! */
 
-	// allocated is always single pbuf in PBUF_RAM, read the buffer into pbuf
-	memcpy(p->payload, modcan_buffer, n * sizeof(struct can_message));
-	p->len = n * sizeof(struct can_message);
-	udp_sendto(&udp, p, &ip_dest, 6000);
+	p->len = len;
+	memcpy(p->payload, cache, p->len);
 
+	udp_sendto(&udp, p, &ip_dest, 6000);				// send to dest IP: port 6000
 	pbuf_free(p);
-	serial_print(".");
 }
 
 static void print_arp_table(void)
@@ -197,12 +217,10 @@ int main(void)
 
 		if (stick_fire(&led_tmr, STICK_HZ)) {
 			LED_TGL(LED0);
-
-			canmsg_get();
 		}
 
 		if (stick_fire(&arp_tmr, ARP_TMR_INTERVAL * STICK_HZ / 1000)) {
-			print_arp_table();
+			//print_arp_table();
 			etharp_tmr();
 		}
 	}
